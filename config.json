@@ -1,0 +1,17 @@
+{
+  "default_key": "default",
+  "keys": {
+    "default": {
+      "key": "---putYourKeyhere---",
+      "desc": "imported API key"
+    }
+  },
+  "endpoint": "api.nsone.net",
+  "port": 443,
+  "api_version": "v1",
+  "cli": {
+  },
+  "verbosity": 0,
+  "ddi": false,
+  "follow_pagination": false
+}
