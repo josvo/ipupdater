@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from ns1 import Config
 from ns1 import NS1
 from requests import get, exceptions

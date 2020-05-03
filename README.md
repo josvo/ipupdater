@@ -21,6 +21,10 @@ To make this program run:
 ...
 ```
 - copy ipupdater.py to /usr/sbin/ipupdater.py
+- make ipudater.py executable
+```bash
+chmod +x /usr/sbin/ipupdater.py
+```
 - replace the resource records in ipupdater.py
 ```python
 resource_records = ["example.net", "www.example.net"]
