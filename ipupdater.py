@@ -5,25 +5,31 @@ from requests import get, exceptions
 from time import time, sleep
 from ipaddress import ip_address
 import logging
+import os
 
 # ---------------------------------------------------------------------
-# All these resource records will be updated
-resource_records = ["example.net", "www.example.net"]
+# All variables can be set via ENV variables or they use the standard value in case
+# there is no ENV variable found
 
-# Wait sleep_time seconds before doing a new query of the dynamic ip
-sleep_time = 10
+# Pass a list of records
+# e.g. RECORDS="example.net;test.example.net"
+resource_records = os.getenv('RECORDS', "www.example.com;test.example.com").split(';')
 
-# Update NS1 IP Address every ns1_update_frequency seconds
-ns1_update_frequency = 600
+# Wait query_frequency seconds before doing a new query; defaults to 10 s
+query_frequency = os.getenv("QUERY_FREQUENCY", 10)
+
+# Update NS1 IP address every ns1_update_frequency seconds
+ns1_update_frequency = os.getenv("UPDATE_FREQUENCY", 600)
 
 # See https://www.ipify.org/
 ipify_url = "https://api.ipify.org"
 
-# Path to the NS1 config file
+# Either pass an environment variable with your API Key or create a config file
+ns1_apikey = os.getenv("NS1_APIKEY", "")
 ns1_config = "/etc/ns1/config.json"
 
 # Set log level (one of DEBUG, INFO, WARNING, ERROR, CRITICAL)
-loglevel = logging.INFO
+loglevel = os.getenv("LOGLEVEL", "INFO")
 # ---------------------------------------------------------------------
 
 
@@ -35,11 +41,12 @@ def check_ip_address(ip, ip_type):
     except ValueError:
         logging.error('{} IP address invalid: {}.'.format(ip_type, ip))
     except Exception as e:
-        logging.critical('{} IP: An unknown error in check_ip_address has occured, {} {}'.format(ip_type, ip, e))
+        logging.critical('{} IP: An unknown error in check_ip_address has occurred, {} {}'.format(ip_type, ip, e))
     return False
 
 
 def get_ns1_ip(myapi, rr):
+    # Just choose the first A record as current IP
     logging.debug("Updating IP address from NS1")
     rec = myapi.loadRecord(rr[0], "A")
     return rec.data["answers"][0]["answer"][0]
@@ -66,12 +73,20 @@ def get_dynamic_ip(url):
     return ""
 
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=loglevel)
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=os.environ.get("LOGLEVEL", loglevel),
+    datefmt='%Y-%m-%d %H:%M:%S')
 logging.info("Starting up ipudater")
 start_time = time()
 
 config = Config()
-api = NS1(configFile=ns1_config)
+if ns1_apikey:
+    config.createFromAPIKey(ns1_apikey)
+    api = NS1(config=config)
+else:
+    api = NS1(configFile=ns1_config)
+
 
 ns1_ip = get_ns1_ip(api, resource_records)
 
@@ -95,12 +110,12 @@ while True:
                 logging.info("Updating {} ".format(r))
                 set_ns1_ip(api, r, dynamic_ip)
             # Put an extra sleep here to make sure the resource records are up to date...
-            sleep(sleep_time)
+            sleep(query_frequency)
             # And get the actual ip address back
             ns1_ip = get_ns1_ip(api, resource_records)
             start_time = time()
 
     else:
-        logging.error("Invalid ip address: trying again in {}s".format(sleep_time))
+        logging.error("Invalid ip address: trying again in {}s".format(query_frequency))
 
-    sleep(sleep_time)
+    sleep(query_frequency)
