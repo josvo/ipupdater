@@ -98,12 +98,12 @@ while True:
         now_time = time()
         elapsed = now_time - start_time
         if elapsed >= ns1_update_frequency:
-            logging.info("Get actual NS1 IP address.")
+            logging.debug("Get actual NS1 IP address.")
             ns1_ip = get_ns1_ip(api, resource_records)
             start_time = time()
 
         if ns1_ip == dynamic_ip:
-            logging.info("Dynamic IP ({}) and NS1 IP ({}) are identical.".format(dynamic_ip, ns1_ip))
+            logging.debug("Dynamic IP ({}) and NS1 IP ({}) are identical.".format(dynamic_ip, ns1_ip))
         else:
             logging.info("Dynamic IP ({}) differs from NS1 IP ({}).".format(dynamic_ip, ns1_ip))
             for r in resource_records:
