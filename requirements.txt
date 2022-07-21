@@ -1,2 +1,2 @@
-ns1-python
-requests
+ns1-python==0.17.4
+requests==2.28.1
